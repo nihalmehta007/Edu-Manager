@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% from 'components/pagination.html' import render_pagination %}
+{% block title %}Manage Teachers — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Teachers</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Manage Teachers</h3>
+        <button class="btn btn-primary" onclick="openModal('addTeacherModal')">+ Add Teacher</button>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="table-header">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="search" placeholder="Search teachers..." value="{{ search }}">
+            </div>
+        </form>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Courses</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in pagination.items %}
+                    <tr>
+                        <td>{{ loop.index + (pagination.page - 1) * pagination.per_page }}</td>
+                        <td>
+                            <div class="cell-user">
+                                <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">
+                                    {{ teacher.initials }}
+                                </div>
+                                <span>{{ teacher.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ teacher.email }}</td>
+                        <td>{{ teacher.phone or 'N/A' }}</td>
+                        <td>{{ teacher.taught_courses | length }}</td>
+                        <td><span class="badge badge-{{ 'active' if teacher.status == 'active' else 'inactive' }}">{{ teacher.status | capitalize }}</span></td>
+                        <td>
+                            <div class="cell-actions">
+                                <button class="btn-icon" onclick="openEditTeacher({{ teacher.id }}, '{{ teacher.name }}', '{{ teacher.email }}', '{{ teacher.phone }}', '{{ teacher.status }}')">✏️</button>
+                                <form method="POST" action="{{ url_for('admin.delete_teacher', id=teacher.id) }}" onsubmit="return confirm('Delete {{ teacher.name }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-icon danger">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not pagination.items %}
+                    <tr><td colspan="7" class="empty-state">No teachers found.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {{ render_pagination(pagination, 'admin.teachers') }}
+    </div>
+</div>
+
+<!-- Add Teacher Modal -->
+<div class="modal-backdrop" id="addTeacherModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add New Teacher</h3>
+            <button class="modal-close" onclick="closeModal('addTeacherModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin.add_teacher') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Default: teacher123">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Teacher</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addTeacherModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Teacher Modal -->
+<div class="modal-backdrop" id="editTeacherModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Edit Teacher</h3>
+            <button class="modal-close" onclick="closeModal('editTeacherModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="editTeacherForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" id="etName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" id="etEmail" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" id="etPhone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status" id="etStatus" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Password (optional)</label>
+                    <input type="password" name="password" class="form-control" placeholder="Leave blank to keep">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editTeacherModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditTeacher(id, name, email, phone, status) {
+    document.getElementById('editTeacherForm').action = '/admin/teachers/' + id + '/edit';
+    document.getElementById('etName').value = name;
+    document.getElementById('etEmail').value = email;
+    document.getElementById('etPhone').value = phone;
+    document.getElementById('etStatus').value = status;
+    openModal('editTeacherModal');
+}
+</script>
+{% endblock %}

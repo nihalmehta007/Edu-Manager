@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Courses — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Courses</span>
+</div>
+
+<div class="page-header"><h1>Available Courses</h1></div>
+
+<div class="dashboard-grid-3">
+    {% for course in courses %}
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                <div class="avatar avatar-lg avatar-{{ ['blue','teal','purple','orange'][loop.index0 % 4] }}">📖</div>
+                <div>
+                    <h3 style="font-size:1rem;">{{ course.name }}</h3>
+                    <p class="text-muted" style="font-size:0.8rem;">{{ course.code }} · {{ course.credits }} credits</p>
+                </div>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">{{ course.description[:80] }}{{ '...' if course.description|length > 80 }}</p>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">
+                👨‍🏫 {{ course.teacher.name if course.teacher else 'TBA' }} · {{ course.enrolled_count }} enrolled
+            </p>
+            {% if course.id in enrolled_ids %}
+            <div style="display:flex;gap:8px;">
+                <span class="badge badge-active">✅ Enrolled</span>
+                <form method="POST" action="{{ url_for('student.unenroll', id=course.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline" onclick="return confirm('Unenroll from {{ course.name }}?')">Unenroll</button>
+                </form>
+            </div>
+            {% else %}
+            <form method="POST" action="{{ url_for('student.enroll', id=course.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-primary">Enroll Now</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% if not courses %}
+    <div class="card"><div class="card-body empty-state"><div class="icon">📖</div><p>No courses available.</p></div></div>
+    {% endif %}
+</div>
+{% endblock %}

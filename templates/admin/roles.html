@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Roles & Permissions — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Roles & Permissions</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Manage Roles</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Description</th>
+                        <th>Users</th>
+                        <th>Permissions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                    <tr>
+                        <td><strong>{{ role.role }}</strong></td>
+                        <td>{{ role.description }}</td>
+                        <td><span class="badge badge-active">{{ role.count }} users</span></td>
+                        <td>
+                            {% if role.role == 'Admin' %}
+                            <span class="badge badge-active">Full Access</span>
+                            {% elif role.role == 'Teacher' %}
+                            <span class="badge badge-graded">Course Management</span>
+                            {% else %}
+                            <span class="badge badge-pending">Limited Access</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Permissions Detail -->
+<div class="dashboard-grid-3 mt-20">
+    <div class="card">
+        <div class="card-header"><h3>🔑 Admin Permissions</h3></div>
+        <div class="card-body">
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Manage all users</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Manage courses</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Manage enrollments</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Upload materials</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> View all reports</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> System settings</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>📖 Teacher Permissions</h3></div>
+        <div class="card-body">
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> View assigned courses</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Upload materials</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Create assignments</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Grade submissions</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--red);">❌</span> Manage users</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--red);">❌</span> System settings</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3>🎓 Student Permissions</h3></div>
+        <div class="card-body">
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> View & enroll courses</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Download materials</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> Submit assignments</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--teal);">✅</span> View marks</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--red);">❌</span> Manage courses</li>
+                <li style="display:flex;align-items:center;gap:8px;"><span style="color:var(--red);">❌</span> Grade students</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Marks — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('teacher.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Marks</span>
+</div>
+
+<div class="page-header"><h1>Marks & Grading</h1></div>
+
+<!-- Ungraded Submissions -->
+{% if ungraded %}
+<div class="card mb-20">
+    <div class="card-header">
+        <h3>📥 Pending Submissions ({{ ungraded|length }})</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Assignment</th>
+                        <th>Course</th>
+                        <th>Submitted</th>
+                        <th>Max Marks</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in ungraded %}
+                    <tr>
+                        <td>
+                            <div class="cell-user">
+                                <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">{{ submission.student_id.initials }}</div>
+                                <span>{{ submission.student_id.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ submission.assignment_id.title }}</td>
+                        <td>{{ submission.assignment_id.course_id.name }}</td>
+                        <td>{{ submission.submitted_at | timeago }}</td>
+                        <td>{{ submission.assignment_id.max_marks }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('teacher.give_marks') }}" style="display:flex;gap:6px;align-items:center;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="submission_id" value="{{ submission.id }}">
+                                <input type="number" name="marks" class="form-control" style="width:70px;padding:6px 8px;" min="0" max="{{ submission.assignment_id.max_marks }}" required>
+                                <input type="text" name="feedback" class="form-control" style="width:120px;padding:6px 8px;" placeholder="Feedback">
+                                <button type="submit" class="btn btn-sm btn-success">✅</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Graded Marks -->
+<div class="card">
+    <div class="card-header">
+        <h3>✅ Graded Marks</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Assignment</th>
+                        <th>Course</th>
+                        <th>Marks</th>
+                        <th>Percentage</th>
+                        <th>Graded</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mark in marks %}
+                    <tr>
+                        <td>
+                            <div class="cell-user">
+                                <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">{{ mark.student_id.initials }}</div>
+                                <span>{{ mark.student_id.name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ mark.assignment_id.title }}</td>
+                        <td>{{ mark.course_id.name }}</td>
+                        <td><strong>{{ mark.marks }}/{{ mark.max_marks }}</strong></td>
+                        <td>
+                            <span class="badge {{ 'badge-active' if mark.percentage >= 70 else ('badge-pending' if mark.percentage >= 50 else 'badge-inactive') }}">
+                                {{ mark.percentage }}%
+                            </span>
+                        </td>
+                        <td>{{ mark.graded_at | timeago }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not marks %}
+                    <tr><td colspan="6" class="empty-state">No marks recorded yet.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

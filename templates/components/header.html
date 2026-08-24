@@ -1,0 +1,22 @@
+<!-- Top Header Bar -->
+<header class="top-header" style="background: var(--bg-card); border-bottom: 1px solid var(--border-light); padding: 14px 30px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <h2 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+            {% block header_title %}Dashboard{% endblock %}
+        </h2>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <!-- Search -->
+        <div class="table-header" style="margin-bottom: 0;">
+            <form method="GET" class="search-box" style="min-width: 200px; background: var(--bg-main); border: 1px solid var(--border);">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="search" placeholder="Search anything..." value="{{ request.args.get('search', '') }}">
+            </form>
+        </div>
+        <!-- User -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.1rem; cursor: pointer;">🔔</span>
+            <div class="avatar avatar-sm avatar-blue" style="cursor: pointer;">{{ current_user.initials }}</div>
+        </div>
+    </div>
+</header>

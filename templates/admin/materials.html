@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% from 'components/pagination.html' import render_pagination %}
+{% block title %}Course Materials — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Materials</span>
+</div>
+
+<div class="dashboard-grid-2">
+    <!-- Upload Form -->
+    <div class="inline-form">
+        <h3>📁 Upload Course Material</h3>
+        <form method="POST" action="{{ url_for('admin.upload_material') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Course</label>
+                <select name="course_id" class="form-control" required>
+                    <option value="">Select Course</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" class="form-control" placeholder="Enter material title" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="2" placeholder="Brief description"></textarea>
+            </div>
+            <div class="form-group">
+                <label>File</label>
+                <div class="file-input-wrapper">
+                    <input type="file" name="file">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">Upload Material</button>
+        </form>
+    </div>
+
+    <!-- Materials List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Uploaded Materials</h3>
+        </div>
+        <div class="card-body">
+            <ul class="recent-list">
+                {% for material in pagination.items %}
+                <li class="recent-item">
+                    <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange'][loop.index0 % 4] }}">📄</div>
+                    <div class="item-info">
+                        <div class="item-name">{{ material.title }}</div>
+                        <div class="item-sub">{{ material.course.name }} · {{ material.original_filename or 'No file' }}</div>
+                    </div>
+                    <div style="display:flex;gap:4px;">
+                        <form method="POST" action="{{ url_for('admin.delete_material', id=material.id) }}" onsubmit="return confirm('Delete?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-icon danger">🗑️</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+                {% if not pagination.items %}
+                <li class="empty-state"><div class="icon">📁</div><p>No materials uploaded yet</p></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

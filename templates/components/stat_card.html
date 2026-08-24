@@ -1,0 +1,15 @@
+<!-- Stat Card Macro -->
+{% macro stat_card(label, value, icon, color, change=None, change_dir='up') %}
+<div class="stat-card {{ color }}">
+    <div class="stat-icon {{ color }}">{{ icon }}</div>
+    <div class="stat-info">
+        <div class="stat-label">{{ label }}</div>
+        <div class="stat-value">{{ value }}</div>
+        {% if change %}
+        <div class="stat-change {{ change_dir }}">
+            {{ '↑' if change_dir == 'up' else '↓' }} {{ change }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

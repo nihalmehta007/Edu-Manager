@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Settings — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Settings</span>
+</div>
+
+<div class="dashboard-grid-2">
+    <div class="card">
+        <div class="card-header"><h3>⚙️ System Information</h3></div>
+        <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-light);">
+                    <span style="font-weight:600;">Application</span>
+                    <span class="text-muted">EduManage v1.0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-light);">
+                    <span style="font-weight:600;">Total Users</span>
+                    <span class="badge badge-active">{{ total_users }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-light);">
+                    <span style="font-weight:600;">Total Courses</span>
+                    <span class="badge badge-graded">{{ total_courses }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-light);">
+                    <span style="font-weight:600;">Database</span>
+                    <span class="text-muted">SQLite</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;">
+                    <span style="font-weight:600;">Framework</span>
+                    <span class="text-muted">Flask 3.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3>🔧 Quick Actions</h3></div>
+        <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <a href="{{ url_for('admin.students') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--teal-light);color:var(--teal);">🎓</div>
+                    <div class="action-text"><h4>Manage Students</h4><p>View and manage student records</p></div>
+                </a>
+                <a href="{{ url_for('admin.teachers') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--blue-light);color:var(--blue);">👨‍🏫</div>
+                    <div class="action-text"><h4>Manage Teachers</h4><p>View and manage teacher records</p></div>
+                </a>
+                <a href="{{ url_for('admin.roles') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--purple-light);color:var(--purple);">🔑</div>
+                    <div class="action-text"><h4>Roles & Permissions</h4><p>Configure access levels</p></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

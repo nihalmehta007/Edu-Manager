@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% from 'components/stat_card.html' import stat_card %}
+{% block title %}Student Dashboard — EduManage{% endblock %}
+
+{% block content %}
+<div class="page-header"><h1>Dashboard</h1></div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    {{ stat_card('Enrolled Courses', stats.enrolled_courses, '📖', 'blue') }}
+    {{ stat_card('Completed Assignments', stats.completed_assignments, '📝', 'teal') }}
+    {{ stat_card('Average Marks', stats.avg_marks|string + '%', '📈', 'purple') }}
+    {{ stat_card('Pending Assignments', stats.pending_assignments, '⏳', 'orange') }}
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left: Courses + Upcoming -->
+    <div>
+        <div class="card mb-20">
+            <div class="card-header"><h3>My Courses</h3></div>
+            <div class="card-body">
+                <div class="course-list">
+                    {% for course in courses %}
+                    <div class="course-item">
+                        <div class="course-icon" style="background:var(--{{ ['blue-light','teal-light','purple-light','orange-light'][loop.index0 % 4] }});color:var(--{{ ['blue','teal','purple','orange'][loop.index0 % 4] }});">📖</div>
+                        <div class="course-info">
+                            <div class="course-name">{{ course.name }}</div>
+                            <div class="course-students">{{ course.teacher.name if course.teacher else 'TBA' }}</div>
+                        </div>
+                        <div class="course-progress">
+                            {% set enrollment = enrollment_map.get(course.id) %}
+                            <div class="progress-text">Progress {{ enrollment.progress if enrollment else 0 }}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ enrollment.progress if enrollment else 0 }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not courses %}
+                    <div class="empty-state"><p>No courses enrolled</p></div>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('student.courses') }}" class="view-all">View All Courses</a>
+        </div>
+
+        <!-- Upcoming Assignments -->
+        <div class="card">
+            <div class="card-header"><h3>Upcoming Assignments</h3></div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Assignment</th><th>Course</th><th>Due Date</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for a in upcoming %}
+                            <tr>
+                                <td><strong>{{ a.title }}</strong></td>
+                                <td>{{ a.course.name }}</td>
+                                <td>{{ a.due_date | formatdate }}</td>
+                                <td><span class="badge badge-pending">Pending</span></td>
+                            </tr>
+                            {% endfor %}
+                            {% if not upcoming %}
+                            <tr><td colspan="4" class="empty-state">No upcoming assignments</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Announcements + Marks Chart + Quick Links -->
+    <div>
+        <div class="card mb-20">
+            <div class="card-header"><h3>Recent Announcements</h3></div>
+            <div class="card-body">
+                <ul class="recent-list">
+                    {% for a in announcements %}
+                    <li class="recent-item">
+                        <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">📢</div>
+                        <div class="item-info">
+                            <div class="item-name">{{ a.title }}</div>
+                            <div class="item-sub">{{ a.course.name if a.course else 'General' }}</div>
+                        </div>
+                        <div class="item-time">{{ a.created_at | timeago }}</div>
+                    </li>
+                    {% endfor %}
+                    {% if not announcements %}
+                    <li class="empty-state"><p>No announcements</p></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-20">
+            <div class="card-header"><h3>Quick Links</h3></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+                <a href="{{ url_for('student.materials') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--blue-light);color:var(--blue);">📁</div>
+                    <div class="action-text"><h4>Browse Materials</h4></div>
+                </a>
+                <a href="{{ url_for('student.assignments') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--purple-light);color:var(--purple);">📝</div>
+                    <div class="action-text"><h4>Submit Assignment</h4></div>
+                </a>
+                <a href="{{ url_for('student.marks') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--teal-light);color:var(--teal);">📈</div>
+                    <div class="action-text"><h4>View My Marks</h4></div>
+                </a>
+                <a href="{{ url_for('student.profile') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--orange-light);color:var(--orange);">👤</div>
+                    <div class="action-text"><h4>Update Profile</h4></div>
+                </a>
+            </div>
+        </div>
+
+        {% if course_averages %}
+        <div class="card">
+            <div class="card-header"><h3>My Marks</h3></div>
+            <div class="card-body" style="display:flex;align-items:center;gap:20px;">
+                <div class="chart-container-sm">
+                    <canvas id="marksChart"></canvas>
+                </div>
+                <div style="flex:1;">
+                    {% for name, avg in course_averages.items() %}
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;">
+                        <span style="font-size:0.85rem;">{{ name }}</span>
+                        <strong style="font-size:0.85rem;">{{ avg }}%</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if course_averages %}
+<script>
+const ctx = document.getElementById('marksChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ course_averages.keys()|list|tojson }},
+        datasets: [{
+            data: {{ course_averages.values()|list|tojson }},
+            backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#ef4444'],
+            borderWidth: 0,
+            hoverOffset: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.parsed + '%' } }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

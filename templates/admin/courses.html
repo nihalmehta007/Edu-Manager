@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% from 'components/pagination.html' import render_pagination %}
+{% block title %}Manage Courses — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Courses</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Manage Courses</h3>
+        <button class="btn btn-primary" onclick="openModal('addCourseModal')">+ Add Course</button>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="table-header">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="search" placeholder="Search courses..." value="{{ search }}">
+            </div>
+        </form>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Course Name</th>
+                        <th>Teacher</th>
+                        <th>Credits</th>
+                        <th>Enrolled</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in pagination.items %}
+                    <tr>
+                        <td><strong>{{ course.code }}</strong></td>
+                        <td>{{ course.name }}</td>
+                        <td>{{ course.teacher.name if course.teacher else 'Unassigned' }}</td>
+                        <td>{{ course.credits }}</td>
+                        <td>{{ course.enrolled_count }}</td>
+                        <td><span class="badge badge-{{ 'active' if course.status == 'active' else 'inactive' }}">{{ course.status | capitalize }}</span></td>
+                        <td>
+                            <div class="cell-actions">
+                                <button class="btn-icon" onclick="openEditCourse({{ course.id }}, '{{ course.name }}', '{{ course.code }}', '{{ course.description }}', {{ course.teacher_id or 0 }}, {{ course.credits }}, '{{ course.status }}')">✏️</button>
+                                <form method="POST" action="{{ url_for('admin.delete_course', id=course.id) }}" onsubmit="return confirm('Delete {{ course.name }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-icon danger">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not pagination.items %}
+                    <tr><td colspan="7" class="empty-state">No courses found.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {{ render_pagination(pagination, 'admin.courses') }}
+    </div>
+</div>
+
+<!-- Add Course Modal -->
+<div class="modal-backdrop" id="addCourseModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add New Course</h3>
+            <button class="modal-close" onclick="closeModal('addCourseModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin.add_course') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Course Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Course Code</label>
+                        <input type="text" name="code" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Assign Teacher</label>
+                        <select name="teacher_id" class="form-control">
+                            <option value="">Select Teacher</option>
+                            {% for t in teachers %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Credits</label>
+                        <input type="number" name="credits" class="form-control" value="3" min="1" max="10">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Course</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addCourseModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Course Modal -->
+<div class="modal-backdrop" id="editCourseModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Edit Course</h3>
+            <button class="modal-close" onclick="closeModal('editCourseModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="editCourseForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Course Name</label>
+                        <input type="text" name="name" id="ecName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Course Code</label>
+                        <input type="text" name="code" id="ecCode" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" id="ecDesc" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Assign Teacher</label>
+                        <select name="teacher_id" id="ecTeacher" class="form-control">
+                            <option value="">Select Teacher</option>
+                            {% for t in teachers %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Credits</label>
+                        <input type="number" name="credits" id="ecCredits" class="form-control" min="1" max="10">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" id="ecStatus" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editCourseModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditCourse(id, name, code, desc, teacherId, credits, status) {
+    document.getElementById('editCourseForm').action = '/admin/courses/' + id + '/edit';
+    document.getElementById('ecName').value = name;
+    document.getElementById('ecCode').value = code;
+    document.getElementById('ecDesc').value = desc;
+    document.getElementById('ecTeacher').value = teacherId || '';
+    document.getElementById('ecCredits').value = credits;
+    document.getElementById('ecStatus').value = status;
+    openModal('editCourseModal');
+}
+</script>
+{% endblock %}

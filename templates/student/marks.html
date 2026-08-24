@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}My Marks — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Marks</span>
+</div>
+
+<div class="page-header"><h1>My Marks</h1></div>
+
+<div class="dashboard-grid">
+    <!-- Marks Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Detailed Marks</h3>
+            {% if overall_avg %}
+            <span class="badge {{ 'badge-active' if overall_avg >= 70 else ('badge-pending' if overall_avg >= 50 else 'badge-inactive') }}">
+                Overall: {{ overall_avg }}%
+            </span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Course</th>
+                            <th>Marks</th>
+                            <th>Percentage</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mark in marks %}
+                        <tr>
+                            <td><strong>{{ mark.assignment_id.title }}</strong></td>
+                            <td>{{ mark.course_id.name }}</td>
+                            <td>{{ mark.marks }}/{{ mark.max_marks }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-active' if mark.percentage >= 70 else ('badge-pending' if mark.percentage >= 50 else 'badge-inactive') }}">
+                                    {{ mark.percentage }}%
+                                </span>
+                            </td>
+                            <td class="text-muted">{{ mark.feedback or 'No feedback' }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not marks %}
+                        <tr><td colspan="5" class="empty-state">No marks recorded yet.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marks Chart -->
+    <div>
+        {% if course_averages %}
+        <div class="card mb-20">
+            <div class="card-header"><h3>Performance by Course</h3></div>
+            <div class="card-body">
+                <div class="chart-container-sm" style="height:200px;width:200px;">
+                    <canvas id="marksDonut"></canvas>
+                </div>
+                <div style="margin-top:20px;">
+                    {% for name, avg in course_averages.items() %}
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light);">
+                        <span style="font-size:0.85rem;font-weight:500;">{{ name }}</span>
+                        <span class="badge {{ 'badge-active' if avg >= 70 else ('badge-pending' if avg >= 50 else 'badge-inactive') }}">{{ avg }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header"><h3>Summary</h3></div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span>Total Graded</span>
+                        <strong>{{ marks|length }}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span>Courses</span>
+                        <strong>{{ course_averages|length }}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span>Overall Average</span>
+                        <strong>{{ overall_avg }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if course_averages %}
+<script>
+const ctx = document.getElementById('marksDonut').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ course_averages.keys()|list|tojson }},
+        datasets: [{
+            data: {{ course_averages.values()|list|tojson }},
+            backgroundColor: ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ec4899','#ef4444'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

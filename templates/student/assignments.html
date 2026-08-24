@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Assignments — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Assignments</span>
+</div>
+
+<div class="page-header"><h1>Assignments</h1></div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Assignment</th>
+                        <th>Course</th>
+                        <th>Due Date</th>
+                        <th>Max Marks</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assignments %}
+                    <tr>
+                        <td><strong>{{ a.title }}</strong></td>
+                        <td>{{ a.course.name }}</td>
+                        <td>
+                            {% if a.due_date %}{{ a.due_date | formatdate }}
+                            {% if a.is_overdue %}<span class="badge badge-inactive" style="margin-left:4px;">Overdue</span>{% endif %}
+                            {% else %}No deadline{% endif %}
+                        </td>
+                        <td>{{ a.max_marks }}</td>
+                        <td>
+                            {% if a.id in submitted_ids %}
+                            <span class="badge badge-active">Submitted</span>
+                            {% else %}
+                            <span class="badge badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if a.id not in submitted_ids %}
+                            <button class="btn btn-sm btn-primary" onclick="openSubmitModal({{ a.id }}, '{{ a.title }}', {{ a.max_marks }})">Submit</button>
+                            {% else %}
+                            <span class="text-muted">Done</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not assignments %}
+                    <tr><td colspan="6" class="empty-state">No assignments for your enrolled courses.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Assignment Modal -->
+<div class="modal-backdrop" id="submitModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="submitTitle">Submit Assignment</h3>
+            <button class="modal-close" onclick="closeModal('submitModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" id="submitForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Your Answer / Notes</label>
+                    <textarea name="text_content" class="form-control" rows="4" placeholder="Write your answer here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Upload File (optional)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Submit Assignment</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('submitModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSubmitModal(id, title, maxMarks) {
+    document.getElementById('submitTitle').textContent = 'Submit: ' + title;
+    document.getElementById('submitForm').action = '/student/assignments/' + id + '/submit';
+    openModal('submitModal');
+}
+</script>
+{% endblock %}

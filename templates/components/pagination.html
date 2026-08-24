@@ -1,0 +1,28 @@
+<!-- Pagination Macro -->
+{% macro render_pagination(pagination, endpoint) %}
+{% if pagination.pages > 1 %}
+<div class="pagination-wrapper">
+    <div class="pagination-info">
+        Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} to
+        {{ [pagination.page * pagination.per_page, pagination.total]|min }} of
+        {{ pagination.total }} entries
+    </div>
+    <div class="pagination">
+        <a href="{{ url_for(endpoint, page=pagination.prev_num, search=request.args.get('search', '')) }}"
+           class="page-btn {{ 'disabled' if not pagination.has_prev }}">‹</a>
+
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+            <a href="{{ url_for(endpoint, page=p, search=request.args.get('search', '')) }}"
+               class="page-btn {{ 'active' if p == pagination.page }}">{{ p }}</a>
+            {% else %}
+            <span class="page-btn disabled">…</span>
+            {% endif %}
+        {% endfor %}
+
+        <a href="{{ url_for(endpoint, page=pagination.next_num, search=request.args.get('search', '')) }}"
+           class="page-btn {{ 'disabled' if not pagination.has_next }}">›</a>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}

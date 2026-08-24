@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% from 'components/pagination.html' import render_pagination %}
+{% block title %}Manage Enrollments — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Enrollments</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Manage Enrollments</h3>
+        <button class="btn btn-primary" onclick="openModal('addEnrollmentModal')">+ Add Enrollment</button>
+    </div>
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Enrolled</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in pagination.items %}
+                    <tr>
+                        <td>{{ loop.index + (pagination.page - 1) * pagination.per_page }}</td>
+                        <td>
+                            <div class="cell-user">
+                                <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">{{ enrollment.student_id.initials }}</div>
+                                <div class="user-details">
+                                    <span class="name">{{ enrollment.student_id.name }}</span>
+                                    <span class="email">{{ enrollment.student_id.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ enrollment.course_id.name }} ({{ enrollment.course_id.code }})</td>
+                        <td>{{ enrollment.enrolled_at | formatdate }}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div class="progress-bar" style="width: 80px;">
+                                    <div class="progress-fill" style="width: {{ enrollment.progress }}%;"></div>
+                                </div>
+                                <span style="font-size:0.8rem;color:var(--text-muted);">{{ enrollment.progress }}%</span>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-{{ enrollment.status }}">{{ enrollment.status | capitalize }}</span></td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.delete_enrollment', id=enrollment.id) }}" onsubmit="return confirm('Remove this enrollment?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-icon danger">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not pagination.items %}
+                    <tr><td colspan="7" class="empty-state">No enrollments found.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {{ render_pagination(pagination, 'admin.enrollments') }}
+    </div>
+</div>
+
+<!-- Add Enrollment Modal -->
+<div class="modal-backdrop" id="addEnrollmentModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add New Enrollment</h3>
+            <button class="modal-close" onclick="closeModal('addEnrollmentModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('admin.add_enrollment') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label>Student</label>
+                    <select name="student_id" class="form-control" required>
+                        <option value="">Select Student</option>
+                        {% for s in students %}
+                        <option value="{{ s.id }}">{{ s.name }} ({{ s.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Course</label>
+                    <select name="course_id" class="form-control" required>
+                        <option value="">Select Course</option>
+                        {% for c in courses %}
+                        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Enrollment</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('addEnrollmentModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

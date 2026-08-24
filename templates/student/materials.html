@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Materials — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Materials</span>
+</div>
+
+<div class="page-header"><h1>Course Materials</h1></div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Course</th>
+                        <th>Description</th>
+                        <th>Uploaded</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in materials %}
+                    <tr>
+                        <td>
+                            <div class="cell-user">
+                                <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange'][loop.index0 % 4] }}">📄</div>
+                                <strong>{{ m.title }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ m.course.name }}</td>
+                        <td class="text-muted">{{ m.description[:50] }}{{ '...' if m.description|length > 50 }}</td>
+                        <td>{{ m.created_at | timeago }}</td>
+                        <td>
+                            {% if m.filename %}
+                            <a href="{{ url_for('student.download_material', id=m.id) }}" class="btn btn-sm btn-primary">⬇️ Download</a>
+                            {% else %}
+                            <span class="text-muted">No file</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not materials %}
+                    <tr><td colspan="5" class="empty-state">No materials available for your enrolled courses.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% from 'components/stat_card.html' import stat_card %}
+{% block title %}Teacher Dashboard — EduManage{% endblock %}
+
+{% block content %}
+<div class="page-header"><h1>Dashboard</h1></div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    {{ stat_card('My Courses', stats.courses, '📖', 'blue') }}
+    {{ stat_card('Enrolled Students', stats.students, '🎓', 'teal') }}
+    {{ stat_card('Assignments', stats.assignments, '📝', 'purple') }}
+    {{ stat_card('Pending Submissions', stats.pending_submissions, '📥', 'orange') }}
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left: My Courses + Students -->
+    <div>
+        <div class="card mb-20">
+            <div class="card-header"><h3>My Courses</h3></div>
+            <div class="card-body">
+                <div class="course-list">
+                    {% for course in courses %}
+                    <div class="course-item">
+                        <div class="course-icon" style="background:var(--{{ ['blue-light','teal-light','purple-light','orange-light'][loop.index0 % 4] }});color:var(--{{ ['blue','teal','purple','orange'][loop.index0 % 4] }});">📖</div>
+                        <div class="course-info">
+                            <div class="course-name">{{ course.name }}</div>
+                            <div class="course-students">{{ course.enrolled_count }} Students</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not courses %}
+                    <div class="empty-state"><p>No courses assigned</p></div>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ url_for('teacher.courses') }}" class="view-all">View All Courses</a>
+        </div>
+
+        <!-- Upcoming Assignments -->
+        <div class="card">
+            <div class="card-header"><h3>Upcoming Assignments</h3></div>
+            <div class="card-body">
+                <ul class="recent-list">
+                    {% for a in upcoming_assignments %}
+                    <li class="recent-item">
+                        <div class="avatar avatar-sm avatar-{{ ['blue','purple','teal','orange'][loop.index0 % 4] }}">📝</div>
+                        <div class="item-info">
+                            <div class="item-name">{{ a.title }}</div>
+                            <div class="item-sub">{{ a.course_id.name }}</div>
+                        </div>
+                        <div class="item-time">Due: {{ a.due_date | formatdate }}</div>
+                    </li>
+                    {% endfor %}
+                    {% if not upcoming_assignments %}
+                    <li class="empty-state"><p>No upcoming assignments</p></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Recent Submissions + Quick Actions -->
+    <div>
+        <div class="card mb-20">
+            <div class="card-header"><h3>Recent Submissions</h3></div>
+            <div class="card-body">
+                <ul class="recent-list">
+                    {% for submission in recent_submissions %}
+                    <li class="recent-item">
+                        <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">{{ submission.student_id.initials }}</div>
+                        <div class="item-info">
+                            <div class="item-name">{{ submission.student_id.name }}</div>
+                            <div class="item-sub">{{ submission.assignment_id.title }}</div>
+                        </div>
+                        <span class="badge badge-{{ submission.status }}">{{ submission.status | capitalize }}</span>
+                    </li>
+                    {% endfor %}
+                    {% if not recent_submissions %}
+                    <li class="empty-state"><p>No recent submissions</p></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <a href="{{ url_for('teacher.submissions') }}" class="view-all">View All Submissions</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Quick Actions</h3></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+                <a href="{{ url_for('teacher.materials') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--blue-light);color:var(--blue);">📁</div>
+                    <div class="action-text"><h4>Upload Study Material</h4></div>
+                </a>
+                <a href="{{ url_for('teacher.assignments') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--purple-light);color:var(--purple);">📝</div>
+                    <div class="action-text"><h4>Create Assignment</h4></div>
+                </a>
+                <a href="{{ url_for('teacher.submissions') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--teal-light);color:var(--teal);">📥</div>
+                    <div class="action-text"><h4>View Submissions</h4></div>
+                </a>
+                <a href="{{ url_for('teacher.marks') }}" class="action-card">
+                    <div class="action-icon" style="background:var(--orange-light);color:var(--orange);">✅</div>
+                    <div class="action-text"><h4>Enter Marks</h4></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}My Courses — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('teacher.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">My Courses</span>
+</div>
+
+<div class="page-header"><h1>My Courses</h1></div>
+
+<div class="dashboard-grid-3">
+    {% for course in courses %}
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                <div class="avatar avatar-lg avatar-{{ ['blue','teal','purple','orange'][loop.index0 % 4] }}">📖</div>
+                <div>
+                    <h3 style="font-size:1rem;">{{ course.name }}</h3>
+                    <p class="text-muted" style="font-size:0.8rem;">{{ course.code }} · {{ course.credits }} credits</p>
+                </div>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">{{ course.description[:100] }}{{ '...' if course.description|length > 100 }}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="badge badge-active">{{ course.enrolled_count }} students</span>
+                <span class="badge badge-{{ 'active' if course.status == 'active' else 'inactive' }}">{{ course.status | capitalize }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% if not courses %}
+    <div class="card"><div class="card-body empty-state"><div class="icon">📖</div><p>No courses assigned to you yet.</p></div></div>
+    {% endif %}
+</div>
+{% endblock %}

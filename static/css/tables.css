@@ -1,0 +1,205 @@
+/* ── Data Tables ─────────────────────────────────────────── */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table thead th {
+    background: var(--bg-card-hover);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+}
+
+.data-table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.data-table thead th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+
+.data-table tbody tr {
+    transition: var(--transition);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+.data-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Cell helpers */
+.data-table .cell-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.data-table .cell-user .user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.data-table .cell-user .user-details .name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.data-table .cell-user .user-details .email {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.data-table .cell-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* ── Table Header Bar ───────────────────────────────────── */
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.table-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.table-header .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card-hover);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    transition: var(--transition);
+    min-width: 250px;
+}
+
+.table-header .search-box:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+.table-header .search-box .search-icon {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.table-header .search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.table-header .search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ── Pagination ─────────────────────────────────────────── */
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    font-size: 0.85rem;
+}
+
+.pagination-info {
+    color: var(--text-muted);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination .page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.pagination .page-btn:hover {
+    background: var(--blue-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.pagination .page-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.pagination .page-btn.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ── Filter Bar ─────────────────────────────────────────── */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-bar select {
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-bar select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% from 'components/stat_card.html' import stat_card %}
+{% block title %}Admin Dashboard — EduManage{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    {{ stat_card('Students', stats.students, '🎓', 'teal', '↑ 12.5%', 'up') }}
+    {{ stat_card('Teachers', stats.teachers, '👨‍🏫', 'blue', '↑ 8.3%', 'up') }}
+    {{ stat_card('Courses', stats.courses, '📖', 'purple', '↑ 5.2%', 'up') }}
+    {{ stat_card('Enrollments', stats.enrollments, '📋', 'orange', '↑ 15.7%', 'up') }}
+</div>
+
+<!-- Chart + Recent Enrollments -->
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Overview</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="overviewChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Enrollments</h3>
+        </div>
+        <div class="card-body">
+            <ul class="recent-list">
+                {% for enrollment in recent_enrollments %}
+                <li class="recent-item">
+                    <div class="avatar avatar-{{ ['blue','teal','purple','orange','pink'][loop.index0 % 5] }}">
+                        {{ enrollment.student_id.initials }}
+                    </div>
+                    <div class="item-info">
+                        <div class="item-name">{{ enrollment.student_id.name }}</div>
+                        <div class="item-sub">{{ enrollment.course_id.name }}</div>
+                    </div>
+                    <div class="item-time">{{ enrollment.enrolled_at | timeago }}</div>
+                </li>
+                {% endfor %}
+                {% if not recent_enrollments %}
+                <li class="empty-state"><div class="icon">📋</div><p>No recent enrollments</p></li>
+                {% endif %}
+            </ul>
+        </div>
+        <a href="{{ url_for('admin.enrollments') }}" class="view-all">View All</a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="{{ url_for('admin.students') }}" class="action-card">
+        <div class="action-icon" style="background: var(--teal-light); color: var(--teal);">🎓</div>
+        <div class="action-text">
+            <h4>Manage Students</h4>
+            <p>Add, update or remove students</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.teachers') }}" class="action-card">
+        <div class="action-icon" style="background: var(--blue-light); color: var(--blue);">👨‍🏫</div>
+        <div class="action-text">
+            <h4>Manage Teachers</h4>
+            <p>Add, update or remove teachers</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.courses') }}" class="action-card">
+        <div class="action-icon" style="background: var(--purple-light); color: var(--purple);">📖</div>
+        <div class="action-text">
+            <h4>Manage Courses</h4>
+            <p>Add, update or remove courses</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.enrollments') }}" class="action-card">
+        <div class="action-icon" style="background: var(--orange-light); color: var(--orange);">📋</div>
+        <div class="action-text">
+            <h4>Manage Enrollments</h4>
+            <p>View and manage enrollments</p>
+        </div>
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctx = document.getElementById('overviewChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [{
+            label: 'Students',
+            data: [800, 920, 950, 1020, 1100, 1180, {{ stats.students }}],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#3b82f6'
+        }, {
+            label: 'Enrollments',
+            data: [1200, 1380, 1500, 1700, 1900, 2100, {{ stats.enrollments }}],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.08)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#10b981'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, padding: 20, font: { family: 'Inter' } } }
+        },
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Inter' } } },
+            y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter' } } }
+        }
+    }
+});
+</script>
+{% endblock %}

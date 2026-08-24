@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Study Materials — EduManage{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('teacher.dashboard') }}">Dashboard</a>
+    <span class="separator">›</span>
+    <span class="current">Materials</span>
+</div>
+
+<div class="dashboard-grid-2">
+    <!-- Upload -->
+    <div class="inline-form">
+        <h3>📁 Upload Study Material</h3>
+        <form method="POST" action="{{ url_for('teacher.upload_material') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>Course</label>
+                <select name="course_id" class="form-control" required>
+                    <option value="">Select Course</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" class="form-control" placeholder="Material title" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>File</label>
+                <div class="file-input-wrapper">
+                    <input type="file" name="file">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">Upload Material</button>
+        </form>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+        <div class="card-header"><h3>Uploaded Materials</h3></div>
+        <div class="card-body">
+            <ul class="recent-list">
+                {% for m in materials %}
+                <li class="recent-item">
+                    <div class="avatar avatar-sm avatar-{{ ['blue','teal','purple','orange'][loop.index0 % 4] }}">📄</div>
+                    <div class="item-info">
+                        <div class="item-name">{{ m.title }}</div>
+                        <div class="item-sub">{{ m.course.name }} · {{ m.created_at | timeago }}</div>
+                    </div>
+                    <form method="POST" action="{{ url_for('teacher.delete_material', id=m.id) }}" onsubmit="return confirm('Delete?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-icon danger">🗑️</button>
+                    </form>
+                </li>
+                {% endfor %}
+                {% if not materials %}
+                <li class="empty-state"><div class="icon">📁</div><p>No materials yet</p></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
