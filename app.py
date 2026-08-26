@@ -19,9 +19,9 @@ def create_app():
     if mongo_uri:
         if mongo_uri.startswith('mongodb+srv://'):
             import certifi
-            db.connect(host=mongo_uri, tlsCAFile=certifi.where())
+            db.connect(db='edumanage', host=mongo_uri, tlsCAFile=certifi.where())
         else:
-            db.connect(host=mongo_uri)
+            db.connect(db='edumanage', host=mongo_uri)
     else:
         db.connect(db='edumanage', host='localhost', port=27017)
     login_manager.init_app(app)
@@ -47,8 +47,12 @@ def create_app():
     app.register_blueprint(student_bp)
 
     # Ensure upload directories exist
-    os.makedirs(app.config['MATERIALS_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['SUBMISSIONS_FOLDER'], exist_ok=True)
+    try:
+        os.makedirs(app.config['MATERIALS_FOLDER'], exist_ok=True)
+        os.makedirs(app.config['SUBMISSIONS_FOLDER'], exist_ok=True)
+    except OSError:
+        # Vercel functions have a read-only filesystem (except /tmp)
+        pass
 
     # Seed on first run
     with app.app_context():
