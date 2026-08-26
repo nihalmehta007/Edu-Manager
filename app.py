@@ -15,7 +15,11 @@ def create_app():
     app.config.from_object(Config)
 
     # Initialize extensions
-    db.connect(db='edumanage', host='localhost', port=27017)
+    mongo_uri = app.config.get('MONGO_URI')
+    if mongo_uri:
+        db.connect(host=mongo_uri)
+    else:
+        db.connect(db='edumanage', host='localhost', port=27017)
     login_manager.init_app(app)
     csrf.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -84,7 +88,7 @@ def create_app():
 
     return app
 
+app = create_app()
 
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, port=5000)
