@@ -1,4 +1,4 @@
-from models import db, User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
+from models import User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
 from datetime import datetime, timedelta
 import random
 

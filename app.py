@@ -18,15 +18,13 @@ def create_app():
     mongo_uri = app.config.get('MONGO_URI')
     try:
         if mongo_uri:
-            if mongo_uri.startswith('mongodb+srv://'):
-                import certifi
-                db.connect(host=mongo_uri, tlsCAFile=certifi.where())
-            else:
-                db.connect(host=mongo_uri)
+            import certifi
+            db.connect(host=mongo_uri, tlsCAFile=certifi.where())
         else:
             db.connect(db='edumanage', host='localhost', port=27017)
     except Exception as e:
-        print(f"Database connection setup warning: {e}")
+        print(f"Database connection warning: {e}")
+
     login_manager.init_app(app)
     csrf.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -56,7 +54,6 @@ def create_app():
         os.makedirs(app.config['MATERIALS_FOLDER'], exist_ok=True)
         os.makedirs(app.config['SUBMISSIONS_FOLDER'], exist_ok=True)
     except OSError:
-        # Vercel functions have a read-only filesystem (except /tmp)
         pass
 
     # Seed on first run
@@ -66,7 +63,7 @@ def create_app():
                 from seed import seed_database
                 seed_database()
     except Exception as e:
-        print(f"Warning: Database check/seeding during startup skipped: {e}")
+        print(f"Seeding skipped: {e}")
 
     # Template context processor
     @app.context_processor
@@ -102,9 +99,28 @@ def create_app():
             return 'N/A'
         return dt.strftime('%d %b, %Y')
 
+    # Error handler for debugging on Vercel
+    @app.errorhandler(500)
+    def internal_error(e):
+        import traceback
+        traceback.print_exc()
+        return 'Internal Server Error', 500
+
     return app
 
 app = create_app()
+
+# Vercel WSGI path fix — Vercel may send the rewritten destination path
+# (e.g., /app.py) instead of the original request path (e.g., /login)
+if os.environ.get('VERCEL'):
+    _original_wsgi = app.wsgi_app
+    def _vercel_wsgi(environ, start_response):
+        path = environ.get('PATH_INFO', '/')
+        if path.startswith('/app.py'):
+            environ['PATH_INFO'] = path[7:] or '/'
+        environ['SCRIPT_NAME'] = ''
+        return _original_wsgi(environ, start_response)
+    app.wsgi_app = _vercel_wsgi
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

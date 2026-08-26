@@ -3,18 +3,17 @@ import uuid
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, abort
 from flask_login import login_required, current_user
-from models import db, User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
+from models import User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
 from forms import MaterialForm, AssignmentForm, MarkForm, ProfileForm, AnnouncementForm
-from mongoengine.errors import DoesNotExist
 
 teacher_bp = Blueprint('teacher', __name__, url_prefix='/teacher')
 
 
 def get_or_404(model, **kwargs):
-    try:
-        return model.objects.get(**kwargs)
-    except DoesNotExist:
+    obj = model.objects(**kwargs).first()
+    if obj is None:
         abort(404)
+    return obj
 
 
 def teacher_required(f):
@@ -91,7 +90,7 @@ def students():
             selected_course = Course.objects.get(id=course_id)
             if selected_course.teacher_id.id == current_user.id:
                 enrolled_students = Enrollment.objects(course_id=selected_course, status='active')
-        except DoesNotExist:
+        except Exception:
             pass
 
     return render_template('teacher/students.html', courses=my_courses,
@@ -127,7 +126,7 @@ def upload_material():
         if course.teacher_id.id != current_user.id:
             flash('Access denied.', 'error')
             return redirect(url_for('teacher.materials'))
-    except DoesNotExist:
+    except Exception:
         flash('Invalid course.', 'error')
         return redirect(url_for('teacher.materials'))
 
@@ -197,7 +196,7 @@ def create_assignment():
         if course.teacher_id.id != current_user.id:
             flash('Access denied.', 'error')
             return redirect(url_for('teacher.assignments'))
-    except DoesNotExist:
+    except Exception:
         flash('Invalid course.', 'error')
         return redirect(url_for('teacher.assignments'))
 

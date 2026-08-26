@@ -3,9 +3,8 @@ import uuid
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, send_from_directory, abort
 from flask_login import login_required, current_user
-from models import db, User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
+from models import User, Course, Enrollment, Material, Assignment, Submission, Mark, Announcement
 from forms import UserForm, CourseForm, MaterialForm, EnrollmentForm
-from mongoengine.errors import DoesNotExist
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -49,10 +48,10 @@ def admin_required(f):
 
 
 def get_or_404(model, **kwargs):
-    try:
-        return model.objects.get(**kwargs)
-    except DoesNotExist:
+    obj = model.objects(**kwargs).first()
+    if obj is None:
         abort(404)
+    return obj
 
 
 # ── Dashboard ──────────────────────────────────────────────

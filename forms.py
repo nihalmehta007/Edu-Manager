@@ -36,7 +36,7 @@ class CourseForm(FlaskForm):
     name = StringField('Course Name', validators=[DataRequired(), Length(min=2, max=150)])
     code = StringField('Course Code', validators=[DataRequired(), Length(min=2, max=20)])
     description = TextAreaField('Description', validators=[Optional()])
-    teacher_id = SelectField('Assigned Teacher', coerce=int, validators=[Optional()])
+    teacher_id = SelectField('Assigned Teacher', coerce=str, validators=[Optional()])
     credits = IntegerField('Credits', validators=[Optional(), NumberRange(min=1, max=10)],
                            default=3)
     status = SelectField('Status', choices=[('active', 'Active'), ('inactive', 'Inactive')])
@@ -44,7 +44,7 @@ class CourseForm(FlaskForm):
 
 class MaterialForm(FlaskForm):
     """Form for uploading course materials."""
-    course_id = SelectField('Course', coerce=int, validators=[DataRequired()])
+    course_id = SelectField('Course', coerce=str, validators=[DataRequired()])
     title = StringField('Title', validators=[DataRequired(), Length(min=2, max=200)])
     description = TextAreaField('Description', validators=[Optional()])
     file = FileField('File')
@@ -52,7 +52,7 @@ class MaterialForm(FlaskForm):
 
 class AssignmentForm(FlaskForm):
     """Form for creating assignments."""
-    course_id = SelectField('Course', coerce=int, validators=[DataRequired()])
+    course_id = SelectField('Course', coerce=str, validators=[DataRequired()])
     title = StringField('Title', validators=[DataRequired(), Length(min=2, max=200)])
     description = TextAreaField('Description', validators=[Optional()])
     due_date = DateTimeLocalField('Due Date', format='%Y-%m-%dT%H:%M',
@@ -84,12 +84,12 @@ class ProfileForm(FlaskForm):
 
 class EnrollmentForm(FlaskForm):
     """Form for managing enrollments."""
-    student_id = SelectField('Student', coerce=int, validators=[DataRequired()])
-    course_id = SelectField('Course', coerce=int, validators=[DataRequired()])
+    student_id = SelectField('Student', coerce=str, validators=[DataRequired()])
+    course_id = SelectField('Course', coerce=str, validators=[DataRequired()])
 
 
 class AnnouncementForm(FlaskForm):
     """Form for creating announcements."""
     title = StringField('Title', validators=[DataRequired(), Length(min=2, max=200)])
     message = TextAreaField('Message', validators=[DataRequired()])
-    course_id = SelectField('Course', coerce=int, validators=[Optional()])
+    course_id = SelectField('Course', coerce=str, validators=[Optional()])
