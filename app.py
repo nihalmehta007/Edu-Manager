@@ -16,14 +16,17 @@ def create_app():
 
     # Initialize extensions
     mongo_uri = app.config.get('MONGO_URI')
-    if mongo_uri:
-        if mongo_uri.startswith('mongodb+srv://'):
-            import certifi
-            db.connect(db='edumanage', host=mongo_uri, tlsCAFile=certifi.where())
+    try:
+        if mongo_uri:
+            if mongo_uri.startswith('mongodb+srv://'):
+                import certifi
+                db.connect(host=mongo_uri, tlsCAFile=certifi.where())
+            else:
+                db.connect(host=mongo_uri)
         else:
-            db.connect(db='edumanage', host=mongo_uri)
-    else:
-        db.connect(db='edumanage', host='localhost', port=27017)
+            db.connect(db='edumanage', host='localhost', port=27017)
+    except Exception as e:
+        print(f"Database connection setup warning: {e}")
     login_manager.init_app(app)
     csrf.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -32,8 +35,10 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        # User id in MongoDB is a string (ObjectId)
-        return User.objects(id=user_id).first()
+        try:
+            return User.objects(id=user_id).first()
+        except Exception:
+            return None
 
     # Register blueprints
     from routes.auth import auth_bp
@@ -55,10 +60,13 @@ def create_app():
         pass
 
     # Seed on first run
-    with app.app_context():
-        if not User.objects.first():
-            from seed import seed_database
-            seed_database()
+    try:
+        with app.app_context():
+            if not User.objects.first():
+                from seed import seed_database
+                seed_database()
+    except Exception as e:
+        print(f"Warning: Database check/seeding during startup skipped: {e}")
 
     # Template context processor
     @app.context_processor
