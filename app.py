@@ -17,7 +17,11 @@ def create_app():
     # Initialize extensions
     mongo_uri = app.config.get('MONGO_URI')
     if mongo_uri:
-        db.connect(host=mongo_uri)
+        if mongo_uri.startswith('mongodb+srv://'):
+            import certifi
+            db.connect(host=mongo_uri, tlsCAFile=certifi.where())
+        else:
+            db.connect(host=mongo_uri)
     else:
         db.connect(db='edumanage', host='localhost', port=27017)
     login_manager.init_app(app)
