@@ -27,22 +27,49 @@ EduManage is a modern, responsive, and robust Educational Management System buil
 *   **Frontend:** HTML5, Vanilla CSS, Jinja2 Templating
 *   **Authentication:** Flask-Login
 *   **Security:** Flask-WTF (CSRF Protection)
+*   **Deployment:** Vercel (Serverless Python Functions)
 
-## Prerequisites
+---
 
-Before running the application, ensure you have the following installed:
+## 🚀 Deploying to Vercel
+
+Deploying EduManage to Vercel requires just a MongoDB Atlas database (free tier) and connecting your GitHub repository.
+
+### Step 1: Set up MongoDB Atlas (Free)
+1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Create a free shared cluster (M0).
+3. Under **Security > Database Access**, create a user with read/write privileges and set a password.
+4. Under **Security > Network Access**, click **Add IP Address** and select **Allow Access From Anywhere (`0.0.0.0/0`)** (required because Vercel functions use dynamic IP addresses).
+5. Click **Connect > Drivers** and copy the connection string. Replace `<password>` with your database password:
+   ```
+   mongodb+srv://<username>:<password>@cluster0.xxx.mongodb.net/edumanage?retryWrites=true&w=majority
+   ```
+
+### Step 2: Deploy on Vercel
+1. Push this repository to GitHub.
+2. Go to [Vercel](https://vercel.com/) and click **Add New Project**, then import your repository.
+3. In the project setup, expand **Environment Variables** and add:
+   *   `MONGO_URI`: `your_mongodb_atlas_connection_string`
+   *   `SECRET_KEY`: `any_random_secret_string_for_sessions`
+4. Click **Deploy**.
+5. Once deployed, the app will automatically seed default demo data on first launch!
+
+---
+
+## Local Installation & Setup
+
+### Prerequisites
 *   [Python 3.8+](https://www.python.org/downloads/)
-*   [MongoDB](https://www.mongodb.com/try/download/community) (running locally on default port `27017`)
+*   [MongoDB](https://www.mongodb.com/try/download/community) (running locally on port `27017` or Atlas URI)
 
-## Installation & Setup
-
-1.  **Clone the repository** (if you haven't already):
+### Steps
+1.  **Clone the repository**:
     ```bash
     git clone https://github.com/YourUsername/edu-manage.git
     cd edu-manage
     ```
 
-2.  **Create a Virtual Environment:**
+2.  **Create and activate a Virtual Environment**:
     ```bash
     # Windows
     python -m venv venv
@@ -53,52 +80,50 @@ Before running the application, ensure you have the following installed:
     source venv/bin/activate
     ```
 
-3.  **Install Dependencies:**
+3.  **Install Dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
-4.  **Ensure MongoDB is running:**
-    Make sure your local MongoDB instance is active. The application will automatically connect to `mongodb://localhost:27017/edumanage`.
-
-5.  **Run the Application:**
+4.  **Run the Application**:
     ```bash
     flask run
     ```
     The application will start on `http://127.0.0.1:5000/`.
 
+---
+
 ## Demo Credentials
 
-The application includes a database seeder that automatically creates dummy data on the first run. You can use the "Demo Credentials" buttons on the login page or log in with the following:
+The database seeder automatically creates sample accounts on the first run:
 
-*   **Admin:** `admin@edumanage.com` / `password123`
-*   **Teacher:** `teacher1@edumanage.com` / `password123`
-*   **Student:** `student1@edumanage.com` / `password123`
+*   **Admin:** `admin@edumanage.com` / `admin123`
+*   **Teacher:** `sarah@edumanage.com` / `teacher123`
+*   **Student:** `john@student.com` / `student123`
+
+---
 
 ## Project Structure
 
 ```
 edu-manage/
 │
+├── api/
+│   └── index.py           # Vercel Serverless Function entry point
 ├── app.py                 # Application factory and initialization
 ├── config.py              # Configuration variables
 ├── models.py              # MongoEngine database schemas
 ├── forms.py               # WTForms for validation and CSRF
 ├── seed.py                # Database seeder for initial data
+├── vercel.json            # Vercel routing and rewrite configuration
+├── .env.example           # Environment variable template
 ├── routes/                # Blueprint routes for different roles
 │   ├── auth.py            # Login/Logout routes
 │   ├── admin.py           # Administrator routes
 │   ├── teacher.py         # Teacher routes
 │   └── student.py         # Student routes
-├── static/                # Static assets
-│   ├── css/               # Custom stylesheets
-│   └── js/                # Client-side JavaScript
+├── static/                # Static assets (CSS, JS, uploads)
 ├── templates/             # Jinja2 HTML templates
-│   ├── admin/
-│   ├── teacher/
-│   ├── student/
-│   ├── auth/
-│   └── components/        # Reusable UI components (modals, pagination, sidebars)
 └── requirements.txt       # Python dependencies
 ```
 

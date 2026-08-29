@@ -5,4 +5,5 @@ Flask-Login==0.6.3
 Flask-WTF==1.2.1
 Werkzeug==3.0.1
 dnspython==2.4.2
-certifi==2023.11.17
+certifi>=2023.11.17
+email-validator>=2.1.0

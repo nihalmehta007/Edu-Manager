@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Setup Required — EduManage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <style>
+        .setup-card {
+            max-width: 640px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .setup-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 32px;
+            text-align: center;
+        }
+        .setup-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .setup-body {
+            padding: 32px;
+        }
+        .step-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+        }
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .step-text {
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        .code-snippet {
+            display: block;
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+        .error-badge {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body style="background: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; padding: 20px;">
+    <div class="setup-card">
+        <div class="setup-header">
+            <div class="setup-icon">🚀</div>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 700;">EduManage Deployed to Vercel</h1>
+            <p style="margin: 8px 0 0 0; opacity: 0.85; font-size: 14px;">Connect your MongoDB database to finish setup</p>
+        </div>
+        <div class="setup-body">
+            {% if db_error %}
+            <div class="error-badge">
+                <strong>Connection Error:</strong> {{ db_error }}
+            </div>
+            {% else %}
+            <div style="background: #eff6ff; color: #1e40af; padding: 12px 16px; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 13px; margin-bottom: 20px;">
+                💡 <strong>Almost there!</strong> Set the <code>MONGO_URI</code> environment variable in your Vercel Dashboard to connect your database.
+            </div>
+            {% endif %}
+
+            <h3 style="font-size: 16px; color: #0f172a; margin-top: 0; margin-bottom: 16px;">Quick 3-Step MongoDB Atlas Setup:</h3>
+
+            <div class="step-box">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    <strong>Get MongoDB Atlas Connection String</strong><br>
+                    Create a free MongoDB database at <a href="https://www.mongodb.com/atlas" target="_blank" style="color: #2563eb; text-decoration: underline;">mongodb.com/atlas</a>. Click <em>Connect > Drivers</em> and copy the URI.
+                    <span class="code-snippet">mongodb+srv://&lt;username&gt;:&lt;password&gt;@cluster0.xxx.mongodb.net/edumanage?retryWrites=true&w=majority</span>
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    <strong>Whitelist All IP Addresses in MongoDB Atlas</strong><br>
+                    In Atlas, go to <strong>Network Access</strong> &rarr; <strong>Add IP Address</strong> &rarr; select <strong>Allow Access From Anywhere (0.0.0.0/0)</strong>. This allows Vercel serverless functions to connect.
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    <strong>Add Environment Variables in Vercel</strong><br>
+                    In your Vercel Project Dashboard &rarr; <strong>Settings</strong> &rarr; <strong>Environment Variables</strong>, add:
+                    <div style="margin-top: 6px;">
+                        • Key: <code>MONGO_URI</code> | Value: <code>your_atlas_connection_string</code><br>
+                        • Key: <code>SECRET_KEY</code> | Value: <code>any_random_secret_string</code>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 24px;">
+                <button onclick="window.location.reload();" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px; cursor: pointer; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: 600;">
+                    🔄 Refresh Once Configured
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
