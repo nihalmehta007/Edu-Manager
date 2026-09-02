@@ -187,22 +187,5 @@ def create_app():
     return app
 
 
-app = create_app()
-
-# Vercel WSGI path fix — normalizes rewritten serverless path
-if os.environ.get('VERCEL'):
-    _original_wsgi = app.wsgi_app
-    def _vercel_wsgi(environ, start_response):
-        path = environ.get('PATH_INFO', '')
-        if path.startswith('/api/index.py'):
-            environ['PATH_INFO'] = path[13:] or '/'
-        elif path.startswith('/api/index'):
-            environ['PATH_INFO'] = path[10:] or '/'
-        elif path.startswith('/app.py'):
-            environ['PATH_INFO'] = path[7:] or '/'
-        environ['SCRIPT_NAME'] = ''
-        return _original_wsgi(environ, start_response)
-    app.wsgi_app = _vercel_wsgi
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
