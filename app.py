@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_login import LoginManager
 import mongoengine as db
 from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from models import User
 
@@ -73,6 +74,9 @@ def create_app():
 
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config.from_object(Config)
+
+    # Trust Vercel's reverse proxy for correct scheme (https) and host headers
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Initialize extensions
     init_database(app)

@@ -12,6 +12,14 @@ class Config:
     # Default to local MongoDB when MONGO_URI is not set
     MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/edumanage'
 
+    # Session cookie — secure settings for Vercel (HTTPS), relaxed for local dev
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    if os.environ.get('VERCEL'):
+        SESSION_COOKIE_SECURE = True
+    else:
+        SESSION_COOKIE_SECURE = False
+
     if os.environ.get('VERCEL'):
         UPLOAD_FOLDER = '/tmp/uploads'
     else:

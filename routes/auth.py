@@ -1,9 +1,23 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
+from urllib.parse import urlparse
 from models import User
 from forms import LoginForm, RegisterForm
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _safe_next(next_url):
+    """Return next_url only if it is a safe relative path (not /login itself)."""
+    if not next_url:
+        return None
+    parsed = urlparse(next_url)
+    # Reject absolute URLs (open-redirect) and /login (loop)
+    if parsed.scheme or parsed.netloc:
+        return None
+    if parsed.path in ('', '/', '/login', '/login/'):
+        return None
+    return next_url
 
 
 @auth_bp.route('/')
@@ -29,10 +43,8 @@ def login():
                 return render_template('auth/login.html', form=form)
             login_user(user)
             flash(f'Welcome back, {user.name}!', 'success')
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for(f'{user.role}.dashboard'))
+            next_page = _safe_next(request.args.get('next'))
+            return redirect(next_page or url_for(f'{user.role}.dashboard'))
         else:
             flash('Invalid email or password.', 'error')
 
