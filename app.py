@@ -16,11 +16,17 @@ _db_error_message = None
 
 
 def init_database(app):
-    """Initialize MongoDB connection. Uses MONGO_URI from config (defaults to local)."""
+    """Initialize MongoDB connection using local MongoDB (or MONGO_URI if set)."""
     global _db_connected, _db_error_message
     mongo_uri = app.config.get('MONGO_URI')
 
     try:
+        # Disconnect any existing connection to avoid stale alias errors
+        try:
+            db.disconnect()
+        except Exception:
+            pass
+
         connect_kwargs = {
             'host': mongo_uri,
             'serverSelectionTimeoutMS': 5000,
@@ -36,11 +42,11 @@ def init_database(app):
         db.connect(**connect_kwargs)
         _db_connected = True
         _db_error_message = None
-        print(f"Database connected: {mongo_uri}")
+        print(f"[DB] Connected to: {mongo_uri}")
     except Exception as e:
         _db_connected = False
         _db_error_message = str(e)
-        print(f"Database connection warning: {e}")
+        print(f"[DB] Connection error: {e}")
 
 
 def try_seed_database(app):
@@ -84,25 +90,6 @@ def create_app():
         except Exception:
             return None
 
-    # Before request hook to catch unconfigured MongoDB on Vercel
-    @app.before_request
-    def check_vercel_db_configuration():
-        if os.environ.get('VERCEL'):
-            # Allow static files and health checks to bypass setup screen
-            if (request.path.startswith('/static') or 
-                request.path in ['/health', '/api/health', '/favicon.ico']):
-                return None
-
-            mongo_uri = app.config.get('MONGO_URI')
-            if not mongo_uri:
-                return render_template('setup_notice.html', db_error=None)
-
-            # If connection failed earlier or is not active, check connectivity
-            try:
-                # Fast ping to ensure DB is reachable
-                User.objects.limit(1).count()
-            except Exception as e:
-                return render_template('setup_notice.html', db_error=str(e))
 
     # Health check endpoints for monitoring and Vercel status
     @app.route('/health')

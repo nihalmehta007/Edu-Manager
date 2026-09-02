@@ -2,7 +2,7 @@ import os
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)  # .env always wins over system env vars
 except ImportError:
     pass  # python-dotenv not installed; rely on system environment variables
 
