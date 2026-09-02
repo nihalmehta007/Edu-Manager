@@ -21,6 +21,12 @@ def init_database(app):
     global _db_connected, _db_error_message
     mongo_uri = app.config.get('MONGO_URI')
 
+    if not mongo_uri or (os.environ.get('VERCEL') and 'localhost' in mongo_uri):
+        _db_connected = False
+        _db_error_message = "MONGO_URI environment variable is not configured."
+        print(f"[DB] {_db_error_message}")
+        return
+
     try:
         # Disconnect any existing connection to avoid stale alias errors
         try:
@@ -41,9 +47,18 @@ def init_database(app):
             except ImportError:
                 pass
         db.connect(**connect_kwargs)
-        _db_connected = True
-        _db_error_message = None
-        print(f"[DB] Connected to: {mongo_uri}")
+
+        # Test connection with a quick ping so we know immediately if credentials or network access failed
+        try:
+            conn = db.connection.get_connection()
+            conn.admin.command('ping')
+            _db_connected = True
+            _db_error_message = None
+            print(f"[DB] Connected successfully: {mongo_uri}")
+        except Exception as ping_err:
+            _db_connected = False
+            _db_error_message = f"Connected but ping failed: {ping_err}"
+            print(f"[DB] Ping warning: {ping_err}")
     except Exception as e:
         _db_connected = False
         _db_error_message = str(e)
@@ -52,8 +67,8 @@ def init_database(app):
 
 def try_seed_database(app):
     """Seed initial data on startup if database is empty."""
-    # Don't try seeding local database if running on Vercel without MONGO_URI
-    if os.environ.get('VERCEL') and not app.config.get('MONGO_URI'):
+    global _db_connected
+    if not _db_connected or not app.config.get('MONGO_URI'):
         return
 
     try:
@@ -78,8 +93,37 @@ def create_app():
     # Trust Vercel's reverse proxy for correct scheme (https) and host headers
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+    # Vercel WSGI path fix — normalizes rewritten serverless path
+    _original_wsgi = app.wsgi_app
+    def _vercel_wsgi(environ, start_response):
+        path = environ.get('PATH_INFO', '')
+        if path.startswith('/api/index.py'):
+            environ['PATH_INFO'] = path[13:] or '/'
+        elif path.startswith('/api/index'):
+            environ['PATH_INFO'] = path[10:] or '/'
+        elif path.startswith('/app.py'):
+            environ['PATH_INFO'] = path[7:] or '/'
+        environ['SCRIPT_NAME'] = ''
+        return _original_wsgi(environ, start_response)
+    app.wsgi_app = _vercel_wsgi
+
     # Initialize extensions
     init_database(app)
+
+    # Catch unconfigured or unreachable MongoDB on Vercel gracefully
+    @app.before_request
+    def check_vercel_db_configuration():
+        if os.environ.get('VERCEL'):
+            if (request.path.startswith('/static') or 
+                request.path in ['/health', '/api/health', '/favicon.ico']):
+                return None
+
+            mongo_uri = app.config.get('MONGO_URI')
+            if not mongo_uri or 'localhost' in mongo_uri:
+                return render_template('setup_notice.html', db_error=None)
+
+            if not _db_connected:
+                return render_template('setup_notice.html', db_error=_db_error_message)
 
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -99,14 +143,9 @@ def create_app():
     @app.route('/health')
     @app.route('/api/health')
     def health():
-        mongo_uri_set = bool(app.config.get('MONGO_URI'))
-        db_status = "connected"
-        db_err = None
-        try:
-            User.objects.limit(1).count()
-        except Exception as e:
-            db_status = "disconnected"
-            db_err = str(e)
+        mongo_uri_set = bool(app.config.get('MONGO_URI')) and 'localhost' not in app.config.get('MONGO_URI', '')
+        db_status = "connected" if _db_connected else "disconnected"
+        db_err = _db_error_message
 
         status_code = 200 if (db_status == "connected" or not os.environ.get('VERCEL')) else 503
         return jsonify({
@@ -182,10 +221,12 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found_error(e):
-        return render_template('errors/500.html', error="404 — Page Not Found"), 404
+        return render_template('errors/404.html'), 404
 
     return app
 
+
+app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

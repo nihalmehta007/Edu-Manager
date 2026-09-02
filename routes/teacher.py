@@ -154,7 +154,7 @@ def upload_material():
 def delete_material(id):
     """Delete a material."""
     material = get_or_404(Material, id=id)
-    if material.course_id.teacher_id.id != current_user.id:
+    if not material.course_id or not material.course_id.teacher_id or material.course_id.teacher_id.id != current_user.id:
         flash('Access denied.', 'error')
         return redirect(url_for('teacher.materials'))
         
@@ -221,7 +221,7 @@ def create_assignment():
 def delete_assignment(id):
     """Delete an assignment."""
     assignment = get_or_404(Assignment, id=id)
-    if assignment.course_id.teacher_id.id != current_user.id:
+    if not assignment.course_id or not assignment.course_id.teacher_id or assignment.course_id.teacher_id.id != current_user.id:
         flash('Access denied.', 'error')
         return redirect(url_for('teacher.assignments'))
     assignment.delete()
@@ -296,7 +296,7 @@ def give_marks():
     assignment = submission.assignment_id
     course = assignment.course_id
 
-    if course.teacher_id.id != current_user.id:
+    if not course or not course.teacher_id or course.teacher_id.id != current_user.id:
         flash('Access denied.', 'error')
         return redirect(url_for('teacher.marks'))
 

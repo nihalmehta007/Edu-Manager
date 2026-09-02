@@ -34,7 +34,7 @@ def student_required(f):
 def dashboard():
     """Student dashboard."""
     my_enrollments = Enrollment.objects(student_id=current_user.id, status='active')
-    course_ids = [e.course_id.id for e in my_enrollments] if my_enrollments else []
+    course_ids = [e.course_id.id for e in my_enrollments if e.course_id] if my_enrollments else []
 
     enrolled_courses = Course.objects(id__in=course_ids) if course_ids else []
 
@@ -81,7 +81,7 @@ def dashboard():
     }
 
     # Enrollment map for progress
-    enrollment_map = {e.course_id.id: e for e in my_enrollments} if my_enrollments else {}
+    enrollment_map = {e.course_id.id: e for e in my_enrollments if e.course_id} if my_enrollments else {}
 
     return render_template('student/dashboard.html', stats=stats, courses=enrolled_courses,
                            announcements=announcements, upcoming=upcoming,
@@ -95,7 +95,7 @@ def dashboard():
 def courses():
     """View all available courses and enrolled courses."""
     my_enrollments = Enrollment.objects(student_id=current_user.id, status='active')
-    enrolled_ids = [e.course_id.id for e in my_enrollments] if my_enrollments else []
+    enrolled_ids = [e.course_id.id for e in my_enrollments if e.course_id] if my_enrollments else []
     all_courses = Course.objects(status='active')
     return render_template('student/courses.html', courses=all_courses,
                            enrolled_ids=enrolled_ids)
@@ -139,7 +139,7 @@ def unenroll(id):
 def materials():
     """View and download course materials."""
     my_enrollments = Enrollment.objects(student_id=current_user.id, status='active')
-    course_ids = [e.course_id.id for e in my_enrollments] if my_enrollments else []
+    course_ids = [e.course_id.id for e in my_enrollments if e.course_id] if my_enrollments else []
     all_materials = Material.objects(course_id__in=course_ids).order_by('-created_at') if course_ids else []
     enrolled_courses = Course.objects(id__in=course_ids) if course_ids else []
     return render_template('student/materials.html', materials=all_materials,
@@ -176,12 +176,12 @@ def download_material(id):
 def assignments():
     """View assignments for enrolled courses."""
     my_enrollments = Enrollment.objects(student_id=current_user.id, status='active')
-    course_ids = [e.course_id.id for e in my_enrollments] if my_enrollments else []
+    course_ids = [e.course_id.id for e in my_enrollments if e.course_id] if my_enrollments else []
     
     all_assignments = Assignment.objects(course_id__in=course_ids).order_by('due_date') if course_ids else []
 
     # Check which assignments have been submitted
-    submitted_ids = [s.assignment_id.id for s in Submission.objects(student_id=current_user.id)]
+    submitted_ids = [s.assignment_id.id for s in Submission.objects(student_id=current_user.id) if s.assignment_id]
 
     return render_template('student/assignments.html', assignments=all_assignments,
                            submitted_ids=submitted_ids)

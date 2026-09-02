@@ -9,8 +9,12 @@ except ImportError:
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'edu-manage-secret-key-2024'
-    # Default to local MongoDB when MONGO_URI is not set
-    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/edumanage'
+    # On Vercel, MONGO_URI must be provided via environment variables (Atlas)
+    # Locally, default to local MongoDB
+    if os.environ.get('VERCEL'):
+        MONGO_URI = os.environ.get('MONGO_URI')
+    else:
+        MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/edumanage'
 
     # Session cookie — secure settings for Vercel (HTTPS), relaxed for local dev
     SESSION_COOKIE_HTTPONLY = True
