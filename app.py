@@ -16,28 +16,27 @@ _db_error_message = None
 
 
 def init_database(app):
-    """Initialize MongoDB connection safely with timeouts for serverless environments."""
+    """Initialize MongoDB connection. Uses MONGO_URI from config (defaults to local)."""
     global _db_connected, _db_error_message
     mongo_uri = app.config.get('MONGO_URI')
 
     try:
-        if mongo_uri:
-            connect_kwargs = {
-                'host': mongo_uri,
-                'serverSelectionTimeoutMS': 5000,
-                'connectTimeoutMS': 5000
-            }
-            if 'mongodb+srv://' in mongo_uri or 'ssl=true' in mongo_uri.lower() or 'tls=true' in mongo_uri.lower():
-                try:
-                    import certifi
-                    connect_kwargs['tlsCAFile'] = certifi.where()
-                except ImportError:
-                    pass
-            db.connect(**connect_kwargs)
-        else:
-            db.connect(db='edumanage', host='localhost', port=27017, serverSelectionTimeoutMS=2000)
+        connect_kwargs = {
+            'host': mongo_uri,
+            'serverSelectionTimeoutMS': 5000,
+            'connectTimeoutMS': 5000
+        }
+        # Add TLS cert for Atlas / SRV / SSL connections
+        if 'mongodb+srv://' in mongo_uri or 'ssl=true' in mongo_uri.lower() or 'tls=true' in mongo_uri.lower():
+            try:
+                import certifi
+                connect_kwargs['tlsCAFile'] = certifi.where()
+            except ImportError:
+                pass
+        db.connect(**connect_kwargs)
         _db_connected = True
         _db_error_message = None
+        print(f"Database connected: {mongo_uri}")
     except Exception as e:
         _db_connected = False
         _db_error_message = str(e)
