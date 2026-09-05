@@ -17,44 +17,57 @@ _db_error_message = None
 
 
 def init_database(app):
-    """Initialize MongoDB connection using local MongoDB (or MONGO_URI if set)."""
+    """Initialize MongoDB connection — serverless-safe (mirrors CNS1 pattern).
+
+    Key differences from the old version:
+    - No conditional 'localhost' checks that block Atlas connections
+    - Uses disconnect_all() to clear stale aliases from frozen serverless processes
+    - Always provides certifi CA bundle for Atlas/TLS connections
+    - Explicit 'default' alias to prevent MongoEngine alias conflicts
+    """
     global _db_connected, _db_error_message
     mongo_uri = app.config.get('MONGO_URI')
 
-    if not mongo_uri or (os.environ.get('VERCEL') and 'localhost' in mongo_uri):
+    if not mongo_uri:
         _db_connected = False
         _db_error_message = "MONGO_URI environment variable is not configured."
         print(f"[DB] {_db_error_message}")
         return
 
     try:
-        # Disconnect any existing connection to avoid stale alias errors
+        # Disconnect ALL existing connections to avoid stale alias errors
+        # on Vercel serverless cold starts (frozen process reuse).
+        # This is the critical fix — mongoengine's global alias registry
+        # persists across frozen/thawed serverless invocations.
         try:
-            db.disconnect()
+            db.disconnect_all()
         except Exception:
             pass
 
         connect_kwargs = {
             'host': mongo_uri,
+            'alias': 'default',
             'serverSelectionTimeoutMS': 5000,
-            'connectTimeoutMS': 5000
+            'connectTimeoutMS': 5000,
         }
-        # Add TLS cert for Atlas / SRV / SSL connections
+
+        # Always provide certifi CA bundle for Atlas / SRV / TLS connections
         if 'mongodb+srv://' in mongo_uri or 'ssl=true' in mongo_uri.lower() or 'tls=true' in mongo_uri.lower():
             try:
                 import certifi
                 connect_kwargs['tlsCAFile'] = certifi.where()
             except ImportError:
                 pass
+
         db.connect(**connect_kwargs)
 
-        # Test connection with a quick ping so we know immediately if credentials or network access failed
+        # Ping to verify connection (same pattern as CNS1's init_db)
         try:
             conn = db.connection.get_connection()
             conn.admin.command('ping')
             _db_connected = True
             _db_error_message = None
-            print(f"[DB] Connected successfully: {mongo_uri}")
+            print(f"[DB] Connected successfully")
         except Exception as ping_err:
             _db_connected = False
             _db_error_message = f"Connected but ping failed: {ping_err}"
@@ -68,7 +81,7 @@ def init_database(app):
 def try_seed_database(app):
     """Seed initial data on startup if database is empty."""
     global _db_connected
-    if not _db_connected or not app.config.get('MONGO_URI'):
+    if not _db_connected:
         return
 
     try:
@@ -107,23 +120,9 @@ def create_app():
         return _original_wsgi(environ, start_response)
     app.wsgi_app = _vercel_wsgi
 
-    # Initialize extensions
+    # Initialize database (graceful — won't crash if DB is unreachable,
+    # matching CNS1's lifespan pattern with try/except + lazy fallback)
     init_database(app)
-
-    # Catch unconfigured or unreachable MongoDB on Vercel gracefully
-    @app.before_request
-    def check_vercel_db_configuration():
-        if os.environ.get('VERCEL'):
-            if (request.path.startswith('/static') or 
-                request.path in ['/health', '/api/health', '/favicon.ico']):
-                return None
-
-            mongo_uri = app.config.get('MONGO_URI')
-            if not mongo_uri or 'localhost' in mongo_uri:
-                return render_template('setup_notice.html', db_error=None)
-
-            if not _db_connected:
-                return render_template('setup_notice.html', db_error=_db_error_message)
 
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -138,20 +137,18 @@ def create_app():
         except Exception:
             return None
 
-
     # Health check endpoints for monitoring and Vercel status
     @app.route('/health')
     @app.route('/api/health')
     def health():
-        mongo_uri_set = bool(app.config.get('MONGO_URI')) and 'localhost' not in app.config.get('MONGO_URI', '')
         db_status = "connected" if _db_connected else "disconnected"
         db_err = _db_error_message
 
-        status_code = 200 if (db_status == "connected" or not os.environ.get('VERCEL')) else 503
+        status_code = 200 if _db_connected else 503
         return jsonify({
-            "status": "healthy" if db_status == "connected" else "degraded",
+            "status": "healthy" if _db_connected else "degraded",
             "database": db_status,
-            "mongo_uri_configured": mongo_uri_set,
+            "mongo_uri_configured": bool(app.config.get('MONGO_URI')),
             "is_vercel": bool(os.environ.get('VERCEL')),
             "error": db_err
         }), status_code

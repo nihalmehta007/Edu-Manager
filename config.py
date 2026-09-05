@@ -9,21 +9,17 @@ except ImportError:
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'edu-manage-secret-key-2024'
-    # On Vercel, MONGO_URI must be provided via environment variables (Atlas)
-    # Locally, default to local MongoDB
-    if os.environ.get('VERCEL'):
-        MONGO_URI = os.environ.get('MONGO_URI')
-    else:
-        MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/edumanage'
 
-    # Session cookie — secure settings for Vercel (HTTPS), relaxed for local dev
+    # MongoDB — always read from env var.
+    # Locally: .env provides it.  On Vercel: set in dashboard.
+    MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/edumanage')
+
+    # Session cookie — secure on HTTPS (Vercel), relaxed locally
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    if os.environ.get('VERCEL'):
-        SESSION_COOKIE_SECURE = True
-    else:
-        SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = bool(os.environ.get('VERCEL'))
 
+    # Uploads — Vercel has a read-only filesystem, use /tmp
     if os.environ.get('VERCEL'):
         UPLOAD_FOLDER = '/tmp/uploads'
     else:
